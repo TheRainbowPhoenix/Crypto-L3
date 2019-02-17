@@ -72,31 +72,17 @@ def kg(p, q):
     n = p*q
     phi = (p-1)*(q-1)
     m = max(p,q)
-    e = random.randrange(m+1, phi)
+    m+=1
+    if(m%2==0): m+=1
+    e = random.randrange(m, phi, 2)
     g = gcd(e, phi)
     while g!= 1:
-        e = random.randrange(m+1, phi)
+        e = random.randrange(m, phi, 2)
         g = gcd(e, phi)
     d = modinv(e, phi)
     pub = (n, e)
     prv = (n, d)
     return (pub, prv)
-
-def keygen(p, q):
-    if(not (isPrime(p) and isPrime(q))): return -1
-    if(p==q): return -2
-    n=p*q
-    phi = (p-1) * (q-1)
-    e = random.randrange(1, phi)
-    g = gcd(e, phi)
-    while g!=1:
-        e = random.randrange(1, phi)
-        g = gcd(e, phi)
-    d = 0
-    # d = rev(e, phi)
-    # e,n public
-    # d,n private
-    return (n,e,d)
 
 def enc(kp, text):
     n, key = kp
@@ -133,6 +119,25 @@ def charize(s):
 def decode(s, dic):
     return ''.join([dic[i] for l in s for i in l])
 
+def myap3(s):
+     return [i for i in range(3,s+1,2) if isPrime(i)]
+
+def myap3m(s, e):
+     return [i for i in range(s,e+1,2) if not i%3==0 and isPrime(i)]
+
+def pickRandomsG(s, e, cnt):
+    gen = myap3m(s,e)
+    r = []
+    for i in range(0,cnt):
+        r += [random.choice(gen)]
+    return r
+#
+# Gen primes :
+# x = range(3,s+1,2)
+# x =
+# x.add(2)
+# x.add(5)
+
 # Tests
 tg0 = gcd(3696, 2871)
 tp0 = isPrime(11)
@@ -146,9 +151,14 @@ p = 73
 q = 97
 
 print(genkey(p,q))
-print(keygen(p,q))
 print(modinv(23, 99))
 print(findModInverse(23,99))
+
+print(pickRandomsG(3367,7081,6))
+
+print(kg(11,23))
+print(myap3(42))
+
 
 # for i in range(0,10):
 #     print(genPrime(32))
@@ -235,8 +245,6 @@ t = 12345
 n,e = 45,123
 
 #enc(kp1, text)
-
-# print(kg(11,23))
 
 #m1 = [9197, 6284, 12836, 8709, 4584, 10239, 11553, 4584, 7008, 12523, 9862, 356, 5356, 1159, 10280, 12523, 7506, 6311]
 #kp1 = [13289, 12413]
