@@ -1,5 +1,45 @@
 # -*- coding: utf-8 -*-
 
+# DEFINES
+
+_HEX = '0123456789ABCDEF'
+_BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+_RADIX64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789+/'
+_ASCII85 = '!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstu'
+_Z85 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#'
+_BASE32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+_GMP = '0123456789ABCDEFGHIJKLMNOPQRSTUV'
+_ZBASE32 = 'YBNDRFG8EJKMCPQXOT1UWISZA345H769'
+_RFC4648 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+_BASE36 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+_BINHEX4 = '!"#$%&\'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr'
+_UNIX_B64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+_6PACK = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@_'
+
+# PRINTABLES DEFINES
+
+_pre = '\033[100m \033[0m'
+_pre_L = '\033[7m \033[0m'
+_pre_succ = '\033[42m \033[0m'
+_pre_fail = '\033[41m \033[0m'
+
+def putline(str):
+    _put(str, _pre)
+def putLine(str):
+    _put(str, _pre_L)
+def _put(str, pre):
+    print('{} {}'.format(pre, str))
+
+def putErr(str):
+    _put(str, _pre_fail)
+def putSucc(str):
+    _put(str, _pre_succ)
+
+def putSep(sz = 80):
+    print('\033[90m{}\033[0m\n'.format('▄'*sz))
+
+# Tests
+
 import random
 
 p = 96
@@ -142,39 +182,63 @@ def pickRandomsG(s, e, cnt):
 tg0 = gcd(3696, 2871)
 tp0 = isPrime(11)
 tp1 = isPrime(85674)
-print("PGCD : {} (Expected 33)".format(tg0))
-tp = "{}".format([tp0, tp1])
-print("Prime : {}".format(tp))
-print("PGCD : {} (Expected 33)".format(tg0))
+expct = 33
+s = "PGCD : {}".format(tg0)
+putSucc(s) if tg0==expct else putErr(s)
+tp =[tp0, tp1]
+
+expct = [True, False]
+
+s = "Prime : {}".format(tp)
+putSucc(s) if tp==expct else putErr(s)
 
 p = 73
 q = 97
 
-print(genkey(p,q))
-print(modinv(23, 99))
-print(findModInverse(23,99))
+expct = 56
 
-print(pickRandomsG(3367,7081,6))
+#print(genkey(p,q))
+m1 = modinv(23, 99)
+m2 = findModInverse(23,99)
 
-print(kg(11,23))
-print(myap3(42))
+s = "Mod inverse : {} ({})".format(m1, 'modinv')
+putSucc(s) if m1==expct else putErr(s)
+s = "Mod inverse : {} ({})".format(m2, 'findModInverse')
+putSucc(s) if m2==expct else putErr(s)
+
+r = pickRandomsG(3367,7081,6)
+s = "Random Primes : {} ".format(r)
+putSucc(s) if False not in [isPrime(i) for i in r] else putErr(s)
+
+kp = kg(11,23)
+s = "Key pairs : {} ".format(kp)
+putSucc(s) if (kp[0][0]==kp[1][0] and kp[0][1]!=kp[1][1]) else putErr(s)
+
+r = myap3(42)
+s = "Primes list : {} ".format(r)
+putSucc(s) if False not in [isPrime(i) for i in r] else putErr(s)
 
 
 # for i in range(0,10):
 #     print(genPrime(32))
 
 kp1, kp2 = kg(p, q)
-print(kp1, kp2)
+s = "Key pairs : {} and {} ".format(kp1, kp2)
+putSucc(s) if (kp1[0]==kp2[0] and kp1[1]!=kp2[1]) else putErr(s)
+
 text = "Khoo !"
 enc = enc(kp1, text)
-print(enc)
-print(dec(kp2, enc))
+putline("gen > {}".format(" ".join("{}".format(str(c)) for c in enc)))
+dec = dec(kp2, enc)
+
+s = "dec > {}".format(''.join(dec))
+putSucc(s) if (''.join(dec)==text) else putErr(s)
 
 # enc = enc2(kp1, text, 2**8)
 # print(enc)
 # print(dec2(kp2, enc, 2**8))
 
-print("======================== ")
+putSep()
 
 dic = [i for i in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ .?€0123456789']
 tab = dict((key, value) for (key, value) in [(dic[i],i) for i in range(0,len(dic))])
@@ -185,17 +249,23 @@ sz = 26
 enc = enc2(kp1, text, sz)
 exp = [[0, 11, 10], [1, 0, 8]]
 raw = pak(enc)
-print("gen >"," ".join("{:02x}".format(ord(c)) for c in raw),"({})".format("Valid"if(enc==exp) else "Invalid"))
-print(" ".join("{:02x}".format(ord(c)) for c in raw))
+s = "gen > {}".format(" ".join("{:02x}".format(ord(c)) for c in raw))
+putSucc(s) if enc==exp else putErr(s)
+#print("gen >"," ".join("{:02x}".format(ord(c)) for c in raw),"({})".format("Valid"if(enc==exp) else "Invalid"))
+# print(" ".join("{:02x}".format(ord(c)) for c in raw))
 kp2 = (689,125)
 unR = unpak(raw)
-print(unR)
+# print(unR)
 dec = dec2(kp2, unR, sz)
 exp = [(2, 4), (17, 8)]
-print("dec > {} ({})".format(dec,"Valid"if(dec==exp) else "Invalid"))
-print(decode(dec, dic))
+# print("dec > {} ({})".format(dec,"Valid"if(dec==exp) else "Invalid"))
+# print(decode(dec, dic))
+msg = 'CERI'
+dec = decode(dec, dic)
+s = "dec > {}".format(dec)
+putSucc(s) if dec==msg else putErr(s)
 
-print("======================== ")
+putSep()
 
 _ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .?€0123456789♥<>'
 dic = [i for i in _ALPHA]
@@ -208,15 +278,17 @@ kp1 = (7081, 239)
 sz = len(_ALPHA)
 enc = enc2(kp1, text, sz)
 raw = pak(enc)
-print("gen >"," ".join("{:02x}".format(ord(c)) for c in raw))
+putline("gen > {}".format(" ".join("{:02x}".format(ord(c)) for c in raw)))
 kp2 = (7081, 4367)
 unR = unpak(raw)
 dec = dec2(kp2, unR, sz)
 dec = decode(dec, dic)
-print("dec > {} ({})".format(dec,"Valid"if(dec==msg) else "Invalid"))
+
+s = "dec > {}".format(dec)
+putSucc(s) if dec==msg else putErr(s)
 
 
-print("======================== ")
+putSep()
 
 _ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ .?€0123456789'
 dic = [i for i in _ALPHA]
@@ -231,14 +303,16 @@ kp1 = (7081, 3367)
 kp2 = (7081, 3223)
 sz = len(_ALPHA)
 enc = enc2(kp1, text, sz)
-#print("gen > {}".format(enc))
+# print("gen > {}".format(enc))
 raw = pak(enc)
-print("gen >"," ".join("{:02x}".format(ord(c)) for c in raw))
+putline("gen > {}".format(" ".join("{:02x}".format(ord(c)) for c in raw)))
 unR = unpak(raw)
-#print(unR)
+# print(unR)
 dec = dec2(kp2, unR, sz)
 dec = decode(dec, dic)
-print("dec > {} ({})".format(dec,"Valid"if(dec==msg) else "Invalid"))
+
+s = "dec > {}".format(dec)
+putSucc(s) if dec==msg else putErr(s)
 
 
 t = 12345
@@ -246,7 +320,63 @@ n,e = 45,123
 
 #enc(kp1, text)
 
-#m1 = [9197, 6284, 12836, 8709, 4584, 10239, 11553, 4584, 7008, 12523, 9862, 356, 5356, 1159, 10280, 12523, 7506, 6311]
-#kp1 = [13289, 12413]
+def sequify(l, sz):
+    return [[int(i/sz%sz),i%sz] for i in l]
+
+# m1 = [9197, 6284, 12836, 8709, 4584, 10239, 11553, 4584, 7008, 12523, 9862, 356, 5356, 1159, 10280, 12523, 7506, 6311]
+# kp1 = [13289, 12413]
+
+
+#_ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+# _ALPHA = '                                 !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxy'
+#_ALPHA = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+# sz = len(_ALPHA)
+# dic = [i for i in _ALPHA]
+# tab = dict((key, value) for (key, value) in [(dic[i],i) for i in range(0,len(dic))])
+
+# enc = sequify(m1, sz)
+# print(enc)
+# raw = pak(enc)
+# print("gen >"," ".join("{:02x}".format(ord(c)) for c in raw))
+# unR = unpak(raw)
+# print(unR)
+# dec = dec2(kp2, unR, sz)
+# print("dec > ",dec)
+# dec = decode(dec, dic)
+# print("dec > {}".format(dec))
+#dec = dec2(kp1, m1, 26)
+#print(dec)
+#
+#
+
+# Base58 key share
+sz = len(_BASE58)
+dic = [i for i in _BASE58]
+tab = dict((key, value) for (key, value) in [(dic[i],i) for i in range(0,len(dic))])
 
 #print(dec(kp1, m1))
+#
+
+# PRINTABLE SECTION
+
+pkey = kp1[0]
+print("")
+
+putLine("Your public key is : \033[1m\033[7m {} \033[0m".format(pkey))
+
+a = _ALPHA
+a = a.replace('ABCDEFGHIJKLMNOPQRSTUVWXYZ','\033[31m{A-Z}\033[0m\033[7m')
+a = a.replace('0123456789','\033[31m{1-9}\033[0m')
+a = a.replace('abcdefghijklmnopqrstuvwxyz','\033[31m{a-z}\033[0m\033[7m')
+
+putLine("Used alphabet is \033[7m{} \033[0m ({})".format(a, len(_ALPHA)))
+
+met = 'E2'
+putLine("Cipher used is \033[4m{}\033[24m".format(met))
+
+met = 'PaK'
+putLine("Transport method used is \033[4m{}\033[24m".format(met))
+
+import pyqrcode
+pub = pyqrcode.create(pkey)
+print(pub.terminal(quiet_zone=1))
