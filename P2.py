@@ -16,6 +16,35 @@ _BINHEX4 = '!"#$%&\'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr'
 _UNIX_B64 = './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 _6PACK = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ@_'
 
+_ALPHABETS = {
+    'HEX':_HEX,
+    'BASE58':_BASE58,
+    'RADIX64':_RADIX64,
+    'ASCII85':_ASCII85,
+    'Z85':_Z85,
+    'BASE32':_BASE32,
+    'GMP':_GMP,
+    'ZBASE32':_ZBASE32,
+    'RFC4648':_RFC4648,
+    'BASE36':_BASE36,
+    'BINHEX4':_BINHEX4,
+    'UNIX_B64':_UNIX_B64,
+    '6PACK':_6PACK
+}
+
+_ALPHA_AZ = '\033[31m{A-Z}\033[0m\033[7m'
+_ALPHA_az = '\033[31m{a-z}\033[0m\033[7m'
+_ALPHA_09 = '\033[31m{0-9}\033[0m' 
+
+def format_alphabet(a):
+    f = [n for n,m in _ALPHABETS.items() if m==a]
+    if f!=[]: return '\033[31m{}\033[0m'.format(''.join(f))
+
+    a = a.replace('ABCDEFGHIJKLMNOPQRSTUVWXYZ',_ALPHA_AZ)
+    a = a.replace('0123456789', _ALPHA_09)
+    a = a.replace('abcdefghijklmnopqrstuvwxyz',_ALPHA_az)
+    return a
+
 # PRINTABLES DEFINES
 
 _pre = '\033[100m \033[0m'
@@ -37,6 +66,46 @@ def putSucc(str):
 
 def putSep(sz = 80):
     print('\033[90m{}\033[0m\n'.format('▄'*sz))
+
+# ALGORYTHM
+
+_CIPHERS = ['CHAR','E2']
+_TRANSPORT = ['RAW','PaK']
+
+def enc(kp, text):
+    n, key = kp
+    return [pow(ord(c),key,n) for c in text]
+
+def enc2(kp, text, sz):
+    text += ' '
+    n, key = kp
+    return [[int(i/sz**2%sz),int(i/sz%sz),i%sz] for i in [pow(i[0]*sz+i[1],key,n) for i in zip(text[0::2],text[1::2])]]
+    # return [(int(i/sz**2%sz),int(i/sz%sz),i%sz) for i in [pow(i[0]*sz+i[1],key,n) for i in zip(text[0::2],text[1::2])]]
+
+def dec(kp, enc):
+    n, key = kp
+    return [chr(pow(c, key, n)) for c in enc]
+
+def dec2(kp, enc, sz):
+    n, key = kp
+    return [(i//sz,i%sz) for i in [pow(e[0]*sz**2+e[1]*sz+e[2],key,n) for e in enc]]
+    # return [(i//sz**2,i//sz,i%sz) for i in [pow(e[0]*sz**2+e[1]*sz+e[2],key,n) for e in enc]]
+
+def pak(s):
+    return ''.join([chr(i) for l in s for i in l])
+
+def unpak(s):
+    t = [ord(j) for l in s for j in l]
+    return [i for i in zip(t[0::3],t[1::3],t[2::3])]
+
+def uncharize(s):
+    return [ord(i) for i in s]
+
+def charize(s):
+    return ' '.join(["{}".format(i) for l in s for i in l])
+
+def decode(s, dic):
+    return ''.join([dic[i] for l in s for i in l])
 
 # Tests
 
@@ -123,41 +192,6 @@ def kg(p, q):
     pub = (n, e)
     prv = (n, d)
     return (pub, prv)
-
-def enc(kp, text):
-    n, key = kp
-    return [pow(ord(c),key,n) for c in text]
-
-def enc2(kp, text, sz):
-    text += ' '
-    n, key = kp
-    return [[int(i/sz**2%sz),int(i/sz%sz),i%sz] for i in [pow(i[0]*sz+i[1],key,n) for i in zip(text[0::2],text[1::2])]]
-    # return [(int(i/sz**2%sz),int(i/sz%sz),i%sz) for i in [pow(i[0]*sz+i[1],key,n) for i in zip(text[0::2],text[1::2])]]
-
-def dec(kp, enc):
-    n, key = kp
-    return [chr(pow(c, key, n)) for c in enc]
-
-def dec2(kp, enc, sz):
-    n, key = kp
-    return [(i//sz,i%sz) for i in [pow(e[0]*sz**2+e[1]*sz+e[2],key,n) for e in enc]]
-    # return [(i//sz**2,i//sz,i%sz) for i in [pow(e[0]*sz**2+e[1]*sz+e[2],key,n) for e in enc]]
-
-def pak(s):
-    return ''.join([chr(i) for l in s for i in l])
-
-def unpak(s):
-    t = [ord(j) for l in s for j in l]
-    return [i for i in zip(t[0::3],t[1::3],t[2::3])]
-
-def uncharize(s):
-    return [ord(i) for i in s]
-
-def charize(s):
-    return ' '.join(["{}".format(i) for l in s for i in l])
-
-def decode(s, dic):
-    return ''.join([dic[i] for l in s for i in l])
 
 def myap3(s):
      return [i for i in range(3,s+1,2) if isPrime(i)]
@@ -359,20 +393,18 @@ tab = dict((key, value) for (key, value) in [(dic[i],i) for i in range(0,len(dic
 
 # PRINTABLE SECTION
 
+#_ALPHA = _BASE58
+
 pkey = kp1[0]
 print("")
 
 putLine("Your public key is : \033[1m\033[7m {} \033[0m".format(pkey))
 
-a = _ALPHA
-a = a.replace('ABCDEFGHIJKLMNOPQRSTUVWXYZ','\033[31m{A-Z}\033[0m\033[7m')
-a = a.replace('0123456789','\033[31m{1-9}\033[0m')
-a = a.replace('abcdefghijklmnopqrstuvwxyz','\033[31m{a-z}\033[0m\033[7m')
+a = format_alphabet(_ALPHA)
+putLine("Used alphabet is \033[7m{} \033[0m({})".format(a, len(_ALPHA)))
 
-putLine("Used alphabet is \033[7m{} \033[0m ({})".format(a, len(_ALPHA)))
-
-met = 'E2'
-putLine("Cipher used is \033[4m{}\033[24m".format(met))
+cip = 'E2'
+putLine("Cipher used is \033[4m{}\033[24m".format(cip))
 
 met = 'PaK'
 putLine("Transport method used is \033[4m{}\033[24m".format(met))
