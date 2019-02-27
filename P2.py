@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from types import *
+import base64
+
 # DEFINES
 
 _HEX = '0123456789ABCDEF'
@@ -34,7 +37,7 @@ _ALPHABETS = {
 
 _ALPHA_AZ = '\033[31m{A-Z}\033[0m\033[7m'
 _ALPHA_az = '\033[31m{a-z}\033[0m\033[7m'
-_ALPHA_09 = '\033[31m{0-9}\033[0m' 
+_ALPHA_09 = '\033[31m{0-9}\033[0m'
 
 def format_alphabet(a):
     f = [n for n,m in _ALPHABETS.items() if m==a]
@@ -65,6 +68,7 @@ def putSucc(str):
     _put(str, _pre_succ)
 
 def putSep(sz = 80):
+    assert type(sz) is IntType, "sz is not an integer: %r" % sz
     print('\033[90m{}\033[0m\n'.format('▄'*sz))
 
 # ALGORYTHM
@@ -106,6 +110,21 @@ def charize(s):
 
 def decode(s, dic):
     return ''.join([dic[i] for l in s for i in l])
+
+# Small numbers
+
+def Factorization(n):
+    c = 2
+    f = []
+    while(c*c<=n):
+        if n % c:
+            c += 1
+        else:
+            n //= c
+            f.append(c)
+    if n > 1:
+        f.append(n)
+    return f
 
 # Tests
 
@@ -347,6 +366,71 @@ dec = decode(dec, dic)
 
 s = "dec > {}".format(dec)
 putSucc(s) if dec==msg else putErr(s)
+
+putSep()
+
+n = 13289
+
+f1 = Factorization(n)
+expct=[97, 137]
+s = "fact > {}".format(f1)
+putSucc(s) if f1==expct else putErr(s)
+
+f2 = Factorization(253)
+expct=[11, 23]
+s = "fact > {}".format(f2)
+putSucc(s) if f2==expct else putErr(s)
+
+phi = reduce((lambda x,y: x*y), [i-1 for i in f1])
+expct=13056
+s = "φ > {}".format(phi)
+putSucc(s) if phi==expct else putErr(s)
+
+e = 12413
+
+tg0 = gcd(phi, e)
+s = "PGCD : {}".format(tg0)
+putSucc(s) if tg0==1 else putErr(s)
+
+print(egcd(e, expct))
+print(modinv(12413, 13056))
+
+def decrypt(p, q, e, n, ct):
+    phi = (p-1) * (q-1)
+    gcd, a, b = egcd(e, phi)
+    d = a
+    if d < 0:
+        d += phi
+    pt = pow(ct, d, n)
+    return pt
+
+m1 = [9197, 6284, 12836, 8709, 4584, 10239, 11553, 4584, 7008, 12523, 9862, 356, 5356, 1159, 10280, 12523, 7506, 6311]
+p,q = 97, 137
+n = 13289
+
+print("dec > {}".format(' '.join(["{}".format(decrypt(p, q, e, n, m)) for m in m1 ])))
+
+n = 755918011
+e = 163119273
+m2 = [671828605,407505023,288441355,679172842,180261802]
+
+f2 = Factorization(n)
+expct=[27449, 27539]
+s = "fact > {}".format(f2)
+putSucc(s) if f2==expct else putErr(s)
+
+phi = reduce((lambda x,y: x*y), [i-1 for i in f2])
+expct=755863024
+s = "φ > {}".format(phi)
+putSucc(s) if phi==expct else putErr(s)
+
+tg0 = gcd(phi, e)
+s = "PGCD : {}".format(tg0)
+putSucc(s) if tg0==1 else putErr(s)
+
+print("dec > {}".format(' '.join(["{}".format(decrypt(p, q, e, n, m)) for m in m2 ])))
+
+putSep()
 
 
 t = 12345
